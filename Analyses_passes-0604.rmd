@@ -1,0 +1,918 @@
+---
+title: "Analyse statistique de données sportives"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load required packages
+
+```{r warning=FALSE, message=FALSE}
+library(devtools)
+#library(StatsBombR)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(tibble)
+```
+
+# Chargement des données
+
+```{r}
+load("data_pass.RData")
+```
+
+# Premier aperçu
+
+```{r}
+dim(Donnees_Finales_Passes)
+colnames(Donnees_Finales_Passes)
+Donnees_Finales_Passes <- as_tibble(Donnees_Finales_Passes)
+Donnees_Finales_Passes
+```
+
+
+### Pass length
+
+```{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_density(aes(x=pass.length,
+                   fill=competition.competition_name), alpha=0.4) +
+  scale_fill_brewer(palette="Dark2")
+```
+
+
+### Pass length ~ Pass type
+
+```{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_jitter(aes(x=pass.height.name, y=pass.length,
+                   color = competition.competition_name),
+              width=0.2, alpha=0.5) +
+  facet_wrap(~competition.competition_name) + scale_color_brewer(palette="Dark2")
+```
+
+
+### Pass length ~ Pass type
+
+```{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=pass.height.name, y=pass.length,
+                   color = competition.competition_name)) +
+  facet_wrap(~competition.competition_name) + scale_color_brewer(palette="Dark2")
+```
+### Pass length ~ Pass type
+
+```{r}
+#ggplot(Donnees_Finales_Passes) +
+#  geom_jitter(aes(x=pass.type.name, y=pass.length,
+#                   color = competition.competition_name)) + scale_color_brewer(palette="Dark2")
+ # + facet_wrap(~competition.competition_name) 
+  
+```
+
+### Angle en fonction de longueur
+
+```{r}
+ggplot(Donnees_Finales_Passes,aes(x=pass.length,y=pass.angle))+ 
+  geom_point(aes(shape=pass.height.name,col=pass.height.name)) 
+```
+
+
+```{r}
+plot(Donnees_Finales_Passes$pass.length, Donnees_Finales_Passes$pass.angle)
+```
+
+### Longueur en fonction de body part
+
+````{r}
+
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=pass.body_part.name, y=pass.length,
+                   color = "World Cup")) + 
+  facet_wrap(~"World Cup") + scale_color_brewer(palette="Dark2")
+````
+
+### Indicateurs statistiques````
+
+### En fonction de la hauteur de la passe
+
+```{r}
+# Moyenne
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$pass.height.name, mean), 1)
+
+# Médiane
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$pass.height.name, median), 1)
+
+# Etendue
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$pass.height.name, max), 1) -
+  round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$pass.height.name, min), 1)
+
+```
+
+### En fonction de la compétition
+
+```{r}
+# Moyenne
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$competition.competition_name, mean), 1)
+
+# Médiane
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$competition.competition_name, median), 1)
+
+# Etendue
+round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$competition.competition_name, max), 1) -
+  round(tapply(Donnees_Finales_Passes$pass.length,
+       Donnees_Finales_Passes$competition.competition_name, min), 1)
+
+```
+
+
+### En fonction du joueur
+
+````{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=pass.recipient.name, y=pass.length,
+                   color = "World Cup")) + 
+  facet_wrap(~"World Cup") + scale_color_brewer(palette="Dark2") #+ coord_cartesian(xlim=c(40,45))
+
+
+````
+
+````{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=, y=pass.length,
+                   color = "World Cup")) + 
+  facet_wrap(~"World Cup") + scale_color_brewer(palette="Dark2") #+ coord_cartesian(xlim=c(40,45))
+
+
+````
+
+Le gardien reçoit les passes de plus loin. Giroud sait tout faire 
+
+### En fonction de sa position
+
+````{r}
+
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=position.name, y=pass.length,
+                   color = "World Cup")) + 
+  facet_wrap(~"World Cup") + scale_color_brewer(palette="Dark2")# + coord_cartesian(xlim=c(0,3))
+
+
+````
+### Angle~Position
+
+````{r}
+
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=position.name, y=pass.angle,
+                   color = "World Cup")) + 
+  facet_wrap(~"World Cup") + scale_color_brewer(palette="Dark2") + coord_cartesian(xlim=c(8,14))
+
+
+````
+
+### Etude des donnees manquantes
+
+```{r}
+library(Amelia)
+sapply(Donnees_Finales_Passes,function(x) sum(is.na(x)))
+missmap(Donnees_Finales_Passes, main = "Missing values vs observed")
+```
+
+Beaucoup moins de données manquantes. 
+
+````{r}
+glimpse(Donnees_Finales_Passes)
+````
+
+
+
+
+
+
+A rereflechir p34
+
+````{r}
+library(FactoMineR)
+library(factoextra)
+````
+### Selection de variables pour faciliter MCA
+
+````{r}
+Donnees_Finale_Passes_Nettoyees <- select(Donnees_Finales_Passes,
+                                    competition.competition_name,
+                                    player.name,position.name,
+                                    pass.recipient.name,
+                                    pass.height.name, pass.body_part.name)
+summary(Donnees_Finale_Passes_Nettoyees)
+````
+````{r}
+res.mca <- MCA(Donnees_Finale_Passes_Nettoyees, graph=FALSE)
+print(res.mca)
+eig.val <- get_eigenvalue(res.mca)
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+fviz_mca_biplot(res.mca, 
+               repel = TRUE, # Avoid text overlapping (slow if many point)
+               ggtheme = theme_minimal())
+````
+
+### Garder les donnees quantitatives en plus des qualitatives
+
+````{r}
+Donnees_Finale_Passes_Nettoyees <- select(Donnees_Finales_Passes,
+                                    competition.competition_name,
+                                    player.name,position.name,
+                                    pass.angle, pass.length,
+                                    pass.recipient.name,
+                                    pass.height.name, pass.body_part.name)
+summary(Donnees_Finale_Passes_Nettoyees)
+````
+
+
+````{r}
+res.mca <- MCA(Donnees_Finale_Passes_Nettoyees, quanti.sup = c(4,5), graph=FALSE)
+print(res.mca)
+eig.val <- get_eigenvalue(res.mca)
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+fviz_mca_biplot(res.mca, 
+               repel = TRUE, # Avoid text overlapping (slow if many point)
+               ggtheme = theme_minimal())
+
+````
+
+### En gardant la variable à prédire
+
+```{r}
+Donnees_FWC_Finale_Passes2 <- filter(Donnees_FWC_Finale, type.name=="Pass")
+Donnees_FWC_Finale_Passes2 <- select(Donnees_FWC_Finale_Passes2,
+                                    competition.competition_name,under_pressure,
+                                    period,minute,second,
+                                    timestamp,location,
+                                    player.name,position.name,
+                                    pass.length,pass.angle,
+                                    pass.outcome.name,pass.type.name,
+                                    pass.end_location,pass.recipient.name,
+                                    pass.height.name, pass.body_part.name)  
+
+Donnees_WWC_Finale_Passes2 <- filter(Donnees_WWC_Finale, type.name=="Pass")
+Donnees_WWC_Finale_Passes2 <- select(Donnees_WWC_Finale_Passes2,
+                                    competition.competition_name,under_pressure,
+                                    period,minute,second,
+                                    timestamp,location,
+                                    player.name,position.name,
+                                    pass.length,pass.angle,pass.outcome.name,
+                                    pass.end_location,pass.recipient.name,
+                                    pass.height.name, pass.body_part.name, pass.type.name)  
+Donnees_Finales_Passes2 <- bind_rows(list(Donnees_FWC_Finale_Passes2, Donnees_WWC_Finale_Passes2))
+Donnees_Finale_Passes_Nettoyees2 <- select(Donnees_Finales_Passes2,
+                                    competition.competition_name,
+                                    player.name,position.name,pass.outcome.name,
+                                    pass.angle, pass.length,
+                                    pass.recipient.name,under_pressure,
+                                    pass.height.name, pass.body_part.name, pass.type.name)
+
+str(Donnees_Finale_Passes_Nettoyees2)
+```
+
+### Visualisation de la variable outcome
+
+````{r}
+ggplot(Donnees_Finales_Passes2) +
+  geom_boxplot(aes(x=pass.outcome.name, y=pass.length,
+                   color = competition.competition_name)) +
+  facet_wrap(~competition.competition_name) + scale_color_brewer(palette="Dark2")
+
+
+````
+
+```{r}
+ggplot(Donnees_FWC_Finale_Passes2) +
+  geom_density(aes(x=pass.length,
+                   fill=pass.outcome.name), alpha=0.4) +
+  scale_fill_brewer(palette="Dark2")
+
+```
+
+
+
+````{r}
+res.mca <- MCA(Donnees_Finale_Passes_Nettoyees2, quanti.sup = c(5,6), graph=FALSE)
+print(res.mca)
+eig.val <- get_eigenvalue(res.mca)
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+fviz_mca_biplot(res.mca, 
+               repel = TRUE, # Avoid text overlapping (slow if many point)
+               ggtheme = theme_minimal())
+
+````
+
+### En gardant moins de variables explicatives
+ 
+````{r}
+Donnees_Finale_Passes_Nettoyees <- select(Donnees_Finales_Passes,
+                                    pass.angle, pass.length,
+                                    pass.height.name,pass.body_part.name)
+summary(Donnees_Finale_Passes_Nettoyees) 
+Donnees_Finales_Passes2$under_pressure<-as.factor(Donnees_Finales_Passes2$under_pressure)
+
+Donnees_Finale_Passes_Nettoyees2$under_pressure<-as.factor(Donnees_Finale_Passes_Nettoyees2$under_pressure)
+table(Donnees_Finale_Passes_Nettoyees2$under_pressure, exclude=FALSE)
+````
+
+````{r}
+res.mca <- MCA(Donnees_Finale_Passes_Nettoyees, quanti.sup=c(1,2), graph=FALSE)
+print(res.mca)
+eig.val <- get_eigenvalue(res.mca)
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+fviz_mca_biplot(res.mca, 
+               repel = TRUE, # Avoid text overlapping (slow if many point)
+               ggtheme = theme_minimal())
+
+````
+
+### Analyse mixte
+
+````{r}
+res.famd <- FAMD(Donnees_Finale_Passes_Nettoyees, graph = FALSE)
+print(res.famd)
+eig.val <- get_eigenvalue(res.famd)
+fviz_screeplot(res.famd)
+````
+
+### Point de réception et de tir de la passe
+
+```{r}
+location<-matrix(unlist(Donnees_Finales_Passes$location), ncol=2, byrow=TRUE)
+end_location<-matrix(unlist(Donnees_Finales_Passes$pass.end_location), ncol=2, byrow=TRUE)
+plot(location[,1], location[,2], xlab="Longitude", ylab="Latitude", main="Position de tir des passes")
+plot(end_location[,1], end_location[,2], xlab="Longitude", ylab="Latitude", main="Position de réception des passes")
+```
+### Création de zones 
+
+````{r}
+# location_x <- sample(0:120, size = 20, replace=TRUE)
+# location_y <- sample(0:80, size = 20, replace=TRUE)
+location<-matrix(unlist(Donnees_Finales_Passes$location), ncol=2, byrow=TRUE)
+location_x <- location[,1]
+location_y <-location[,2]
+
+location <- cbind.data.frame(location_x, location_y)
+
+#location$zone <- rep(NA, 20)
+
+for (i in 1:1685) {
+if ((location$location_x[i] <= 30) & (location$location_y[i] <= 16)) {location$zone[i] <- "Z1"}
+if ((location$location_x[i] <= 30) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z2"}
+if ((location$location_x[i] <= 30) & (location$location_y[i] > 62)) {location$zone[i] <- "Z1"}
+  
+  
+if ((location$location_x[i] > 30) & (location$location_x[i] <=60)&(location$location_y[i] <= 16)) {location$zone[i] <- "Z3"}
+if ((location$location_x[i] > 30) & (location$location_x[i] <=60) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z4"}
+if ((location$location_x[i] > 30) & (location$location_x[i] <=60) & (location$location_y[i] > 62)) {location$zone[i] <- "Z3"}
+  
+if ((location$location_x[i] > 60) & (location$location_x[i] <=90)&(location$location_y[i] <= 16)) {location$zone[i] <- "Z3"}
+if ((location$location_x[i] > 60) & (location$location_x[i] <=90) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z5"}
+if ((location$location_x[i] > 60) & (location$location_x[i] <=90) & (location$location_y[i] > 62)) {location$zone[i] <- "Z3"}
+  
+if ((location$location_x[i] > 90) & (location$location_y[i] <= 16)) {location$zone[i] <- "Z1"}
+if ((location$location_x[i] >90) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z6"}
+if ((location$location_x[i] >90) & (location$location_y[i] > 62)) {location$zone[i] <- "Z1"}  
+}
+
+location$zone <- as.factor(location$zone)
+
+plot(location$location_x, location$location_y,
+     col = as.integer(location$zone),
+     pch=16, xlim=c(-5,125), ylim=c(-5,85))
+abline(h=c(18,62), v=c(30,60,90), lty=2)
+
+text(x=c(20,20,60,60,100,100,20,45,75,100), y=c(5, 75, 5, 75, 5, 75,40,40,40,40),
+     labels = c("Z1","Z1","Z3","Z3","Z1","Z1","Z2","Z4","Z5","Z6"), font=2, cex=2,
+     col= "lightgrey")
+zone<-location$zone
+
+````
+
+### Probleme zone arrivee (a reregarder)
+````{r}
+# location_x <- sample(0:120, size = 20, replace=TRUE)
+# location_y <- sample(0:80, size = 20, replace=TRUE)
+location_arr<-matrix(unlist(Donnees_Finales_Passes$pass.end_location), ncol=2, byrow=TRUE)
+location_arr_x <- location_arr[,1]
+location_arr_y <-location_arr[,2]
+
+location_arr <- cbind.data.frame(location_arr_x, location_arr_y)
+
+#location$zone <- rep(NA, 20)
+
+for (i in 1:1685) {
+if ((location_arr$location_arr_x[i] <= 30) & (location_arr$location_arr_y[i] <= 16)) {location_arr$zone[i] <- "Z1"}
+if ((location_arr$location_arr_x[i] <= 30) & (location_arr$location_arr_y[i] > 16)&(location_arr$location_arr_y[i] <= 62)) {location_arr$zone[i] <- "Z2"}
+if ((location_arr$location_arr_x[i] <= 30) & (location_arr$location_arr_y[i] > 62)) {location_arr$zone[i] <- "Z1"}
+  
+  
+if ((location_arr$location_arr_x[i] > 30) & (location_arr$location_arr_x[i] <=60)&(location_arr$location_arr_y[i] <= 16)) {location_arr$zone[i] <- "Z3"}
+if ((location_arr$location_arr_x[i] > 30) & (location_arr$location_arr_x[i] <=60) & (location_arr$location_arr_y[i] > 16)&(location_arr$location_arr_y[i] <= 62)) {location_arr$zone[i] <- "Z4"}
+if ((location_arr$location_arr_x[i] > 30) & (location_arr$location_arr_x[i] <=60) & (location_arr$location_arr_y[i] > 62)) {location_arr$zone[i] <- "Z3"}
+  
+if ((location_arr$location_arr_x[i] > 60) & (location_arr$location_arr_x[i] <=90)&(location_arr$location_arr_y[i] <= 16)) {location_arr$zone[i] <- "Z3"}
+if ((location_arr$location_arr_x[i] > 60) & (location_arr$location_arr_x[i] <=90) & (location_arr$location_arr_y[i] > 16)&(location_arr$location_arr_y[i] <= 62)) {location_arr$zone[i] <- "Z5"}
+if ((location_arr$location_arr_x[i] > 60) & (location_arr$location_arr_x[i] <=90) & (location_arr$location_arr_y[i] > 62)) {location_arr$zone[i] <- "Z3"}
+  
+if ((location_arr$location_arr_x[i] > 90) & (location_arr$location_arr_y[i] <= 16)) {location_arr$zone[i] <- "Z1"}
+if ((location_arr$location_arr_x[i] >90) & (location_arr$location_arr_y[i] > 16)&(location_arr$location_arr_y[i] <= 62)) {location_arr$zone[i] <- "Z6"}
+if ((location_arr$location_arr_x[i] >90) & (location_arr$location_arr_y[i] > 62)) {location_arr$zone[i] <- "Z1"}  
+}
+location_arr$zone_arrivee <- as.factor(location_arr$zone)
+location_arr$zone_arrivee
+plot(location_arr$location_arr_x, location_arr$location_arr_y,
+     col = as.integer(location_arr$zone_arrivee),
+     pch=16, xlim=c(-5,125), ylim=c(-5,85))
+abline(h=c(18,62), v=c(30,60,90), lty=2)
+
+text(x=c(20,20,60,60,100,100,20,45,75,100), y=c(5, 75, 5, 75, 5, 75,40,40,40,40),
+     labels = c("Z1","Z1","Z3","Z3","Z1","Z1","Z2","Z4","Z5","Z6"), font=2, cex=2,
+     col= "lightgrey")
+zone_arrivee<-location_arr$zone_arrivee
+
+````
+
+
+### Affichage passes de Olivier Giroud
+
+```{r}
+Passes_Giroud<- filter(Donnees_Finales_Passes2, player.name=="Olivier Giroud")
+glimpse(Passes_Giroud)
+```
+
+```{r}
+
+# depart<-matrix(unlist(Passes_Giroud$location), ncol=2, byrow=TRUE)
+# depart_x <- depart[,1]
+# depart_y <-depart[,2]
+# 
+# depart <- cbind.data.frame(depart_x, depart_y)
+# 
+# 
+# arrivee<-matrix(unlist(Passes_Giroud$pass.end_location), ncol=2, byrow=TRUE)
+# arrivee_x <- arrivee[,1]
+# arrivee_y <-arrivee[,2]
+# 
+# arrivee <- cbind.data.frame(arrivee_x, arrivee_y)
+# #arrivee
+# 
+# #depart_y <- 80 - depart_y
+# #arrivee_y <- 80 - arrivee_y
+# 
+# location_x=depart_x
+# location_y=depart_y
+# location=0
+# location <-cbind.data.frame(location_x, location_y)
+# location
+# longueur <- Passes_Giroud$pass.length
+# 
+# for (i in 1:23) {
+# if ((location$location_x[i] <= 30) & (location$location_y[i] <= 16)) {location$zone[i] <- "Z1"}
+# if ((location$location_x[i] <= 30) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z2"}
+# if ((location$location_x[i] <= 30) & (location$location_y[i] > 62)) {location$zone[i] <- "Z1"}
+#   
+#   
+# if ((location$location_x[i] > 30) & (location$location_x[i] <=60)&(location$location_y[i] <= 16)) {location$zone[i] <- "Z3"}
+# if ((location$location_x[i] > 30) & (location$location_x[i] <=60) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z4"}
+# if ((location$location_x[i] > 30) & (location$location_x[i] <=60) & (location$location_y[i] > 62)) {location$zone[i] <- "Z3"}
+#   
+# if ((location$location_x[i] > 60) & (location$location_x[i] <=90)&(location$location_y[i] <= 16)) {location$zone[i] <- "Z3"}
+# if ((location$location_x[i] > 60) & (location$location_x[i] <=90) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z5"}
+# if ((location$location_x[i] > 60) & (location$location_x[i] <=90) & (location$location_y[i] > 62)) {location$zone[i] <- "Z3"}
+#   
+# if ((location$location_x[i] > 90) & (location$location_y[i] <= 16)) {location$zone[i] <- "Z1"}
+# if ((location$location_x[i] >90) & (location$location_y[i] > 16)&(location$location_y[i] <= 62)) {location$zone[i] <- "Z6"}
+# if ((location$location_x[i] >90) & (location$location_y[i] > 62)) {location$zone[i] <- "Z1"}  
+# }
+# location$zone
+# location$zone <- as.factor(location$zone)
+# 
+# 
+# plot.new()
+# plot(0, type="n", xlim=c(0, 120), ylim=c(0,80))
+# rect(0, 0, 120, 80)
+# points(location_x, location_y, col=as.integer(location$zone),pch="o", cex=2)
+# # points(arrivee[1], arrivee[2], col="red", pch="+", cex=2)
+# arrows(x0=depart_x, y0=depart_y, x1=arrivee_x, y1=arrivee_y,
+#        col="red")
+# 
+# 
+# par(new=T)
+# abline(h=c(18,62), v=c(30,60,90), lty=2)
+# 
+# text(x=c(20,20,60,60,100,100,20,45,75,100), y=c(5, 75, 5, 75, 5, 75,40,40,40,40),
+#      labels = c("Z1","Z1","Z3","Z3","Z1","Z1","Z2","Z4","Z5","Z6"), font=2, cex=2,
+#      col= "lightgrey")
+# 
+
+```
+### Remaniement de la variable angle
+
+````{r}
+Passes_Giroud$pass.angle
+deplacement<-matrix(unlist(Passes_Giroud$location), ncol=2, byrow=TRUE) #translatation du point de depart au zéro du terrain
+deplacement_x <- deplacement[,1]
+deplacement_y <-deplacement[,2]
+
+deplacement <- cbind.data.frame(deplacement_x, deplacement_y)
+
+
+arrivee<-matrix(unlist(Passes_Giroud$pass.end_location), ncol=2, byrow=TRUE)
+arrivee_x <- arrivee[,1]-deplacement_x
+arrivee_y <-arrivee[,2]-deplacement_y
+arrivee_y
+
+arrivee <- cbind.data.frame(arrivee_x, arrivee_y) #le vecteur est donc au point de départ (0,0)
+longueur <- Passes_Giroud$pass.length
+
+angle=asin(arrivee_y/longueur)
+print(angle)
+
+````
+### Generalisation au jeu de données entier
+
+
+```{r}
+deplacement<-matrix(unlist(Donnees_Finales_Passes2$location), ncol=2, byrow=TRUE) #translatation du point de depart au zéro du terrain
+deplacement_x <- deplacement[,1]
+deplacement_y <-deplacement[,2]
+
+deplacement <- cbind.data.frame(deplacement_x, deplacement_y)
+
+
+arrivee<-matrix(unlist(Donnees_Finales_Passes2$pass.end_location), ncol=2, byrow=TRUE)
+arrivee_x <- arrivee[,1]-deplacement_x
+arrivee_y <-arrivee[,2]-deplacement_y
+
+
+arrivee <- cbind.data.frame(arrivee_x, arrivee_y) #le vecteur est donc au point de départ (0,0)
+longueur <- Donnees_Finales_Passes2$pass.length
+
+
+angle=asin(arrivee_y/longueur)
+
+
+```
+
+````{r}
+# theta <- Donnees_Finales_Passes2$pass.angle[3]
+# theta
+# location<-matrix(unlist(Donnees_Finales_Passes2$location), ncol=2, byrow=TRUE)
+# locdx <- location[,1]
+# locdy <-location[,2]
+# 
+# locationend<-matrix(unlist(Donnees_Finales_Passes2$pass.end_location), ncol=2, byrow=TRUE)
+# locendx <- locationend[,1]
+# locendy <-locationend[,2]
+# L <- Donnees_Finales_Passes2$pass.length[3]
+# 
+# dist_ref_angle = L* sin(theta)
+# dist_ref_angle
+# #dist_ref_calcul = abs(locdy[3] - locendy[3])
+# #dist_ref_calcul
+# #theta_calcul = asin(dist_ref_calcul/L)
+# #theta_calcul
+# 
+# plot(0, type="n", xlim=c(0, 120), ylim=c(0,80))
+# rect(0, 0, 120, 80)
+# 
+# points(locdx[3], locdy[3],pch="x", cex=2)
+# arrows(x0=locdx[3], y0=locdy[3], x1=locendx[3], y1=locendy[3],
+#        col="red")
+# 
+# arrows(x0=locendx[3], y0=locendy[3], x1 = locendx[3], y1 = locdy[3], col="blue")
+# abline(h=c(locdy[3]), lty=2)
+````
+
+La variable angle est exprimée en radian, et la référence est l'axe qui coupe le terrain horizontalement et qui passe par le point de départ de la passe.
+```{r}
+
+#ggplot(Donnees_FWC) +
+#  geom_density(aes(x=pass.length,
+#                   fill=competition_stage.name), alpha=0.4) +
+#  scale_fill_brewer(palette="Dark2")
+
+#ggplot(Donnees_WWC) +
+#  geom_density(aes(x=pass.length,
+#                   fill=competition_stage.name), alpha=0.4) +
+#  scale_fill_brewer(palette="Dark2")
+
+```
+### Remaniement de la variable outcome
+
+```{r}
+table(Donnees_Finales_Passes2$pass.outcome.name,exclude=NULL)
+Donnees_Finales_Passes2$pass.outcome.name<-factor(Donnees_Finales_Passes2$pass.outcome.name, exclude=NULL)
+levels(Donnees_Finales_Passes2$pass.outcome.name)<-list("Rate"=c("Incomplete", "Injury Clearance", "Out", "Pass Offside", "Unknown"),"Reussi"=NA)
+table(Donnees_Finales_Passes2$pass.outcome.name)
+```
+
+### Remaniement de la variable under_pressure
+
+````{r}
+table(Donnees_Finales_Passes2$under_pressure,exclude=NULL)
+Donnees_Finales_Passes2$under_pressure<-factor(Donnees_Finales_Passes2$under_pressure, exclude=NULL)
+levels(Donnees_Finales_Passes2$under_pressure)<-list("TRUE"=c("TRUE"),"FALSE"=NA)
+table(Donnees_Finales_Passes2$under_pressure)
+````
+### Remaniement de la variable pass.type_name
+
+````{r}
+table(Donnees_Finales_Passes2$pass.type.name,exclude=NULL)
+```
+```{r}
+Donnees_Finales_Passes2$pass.type.name<-factor(Donnees_Finales_Passes2$pass.type.name, exclude=NULL)
+levels(Donnees_Finales_Passes2$pass.type.name)<-list("Special"=c("Corner","Free Kick", "Goal Kick", "Interception", "Kick Off", "Recovery", "Throw-in"),"Normal"=NA)
+table(Donnees_Finales_Passes2$pass.type.name)
+```
+### Remaniement de la variable body_part
+```{r}
+#Pour l'instant, on fait ça, mais peut-être supprimé les other
+table(Donnees_Finales_Passes2$pass.body_part.name,exclude=NULL)
+Donnees_Finales_Passes2$pass.body_part.name<-factor(Donnees_Finales_Passes2$pass.body_part.name, exclude=NULL)
+levels(Donnees_Finales_Passes2$pass.body_part.name)<-list("Foot"=c("Left Foot","Right Foot"),"Other"=c("Drop Kick","Head","Keeper Arm", "Other", NA))
+table(Donnees_Finales_Passes2$pass.body_part.name)
+```
+
+```{r}
+ggplot(Donnees_Finales_Passes2) +
+  geom_density(aes(x=pass.length,
+                   fill=pass.outcome.name), alpha=0.4) +
+  scale_fill_brewer(palette="Dark2")
+
+```
+```{r}
+ggplot(Donnees_Finales_Passes2) +
+  geom_density(aes(x=pass.angle,
+                   fill=pass.outcome.name), alpha=0.4) +
+  scale_fill_brewer(palette="Dark2")
+
+```
+````{r}
+ggplot(Donnees_Finales_Passes2) +
+  geom_boxplot(aes(x=pass.height.name, y=pass.length,
+                   color = pass.outcome.name)) +
+  facet_wrap(~pass.outcome.name) + scale_color_brewer(palette="Dark2")
+
+
+````
+
+
+### Modèle de régression logistique
+```{r}
+
+Y <- Donnees_Finales_Passes2$pass.outcome
+Y<- as.factor(Y)
+
+length <- Donnees_Finales_Passes2$pass.length
+angle <-Donnees_Finales_Passes2$pass.angle
+body_part <- Donnees_Finales_Passes2$pass.body_part.name
+position <- Donnees_Finales_Passes2$position.name
+#zone<-location$zone
+#zone_arrivee<-location_arr$zone_arrivee
+type<-Donnees_Finales_Passes2$pass.type.name
+pressure<-Donnees_Finales_Passes2$under_pressure
+
+Donnees_Finales_Passes2 <- cbind(Donnees_Finales_Passes2,location$zone)
+Donnees_Finales_Passes2 <- cbind(Donnees_Finales_Passes2,location_arr$zone_arrivee)
+```
+## Modèle avec seulement LENGTH et ANGLE
+
+#Test de nullité des param angle et length
+```{r}
+Yml <- glm(Y~angle + length, data = Donnees_Finales_Passes2 , family = binomial)
+summary(Yml)
+```
+#test du model ANGLE vs model angle*length
+```{r}
+Yangle <-glm(Y ~ angle, data = Donnees_Finales_Passes2, family = "binomial")
+anova(Yangle, Yml, test = "Chisq")
+```
+#test du model LENGTH vs model angle*length
+```{r}
+anova(glm(Y ~ length, data = Donnees_Finales_Passes2, family = "binomial"), Yml, test = "Chisq")
+```
+
+#comparaison modèle avec et sans interaction
+```{r}
+Yml_inter = glm(Y ~ length * angle, data = Donnees_Finales_Passes2, family = "binomial")
+anova(Yml_inter, Yml, test = "Chisq")
+```
+
+
+## Modèle avec plus de paramètres 
+
+#test de nullité des paramètres (sans interaction)
+
+
+```{r}
+mcomplet <- glm(Y ~ length + angle + type+body_part + zone + zone_arrivee + pressure 
+                + angle:zone + length:zone + angle:zone_arrivee + length:zone_arrivee + angle, 
+                data = Donnees_Finales_Passes2, family = "binomial")
+summary(mcomplet)
+```
+
+```{r}
+library(MASS)
+```
+# test de nullité des variables zone de départ+angle+longueur
+```{r}
+mcomplet2 <- glm(Y ~ zone * length * angle  , data = Donnees_Finales_Passes2, family = "binomial")
+mcomplet2_si <- glm(Y ~ zone + length + angle  , data = Donnees_Finales_Passes2, family = "binomial")
+summary(mcomplet2)
+```
+# test de nullité des variables zone de départ* zone arrivée *longueur
+```{r}
+mcomplet3 <- glm(Y ~ zone * length * zone_arrivee  , data = Donnees_Finales_Passes2, family = "binomial")
+summary(mcomplet3)
+```
+# Comparaison modèle 2 à 2 : zone + length + angle VS zone + zone_arrivee
+```{r}
+mod1 <- glm(Y~zone + length + angle, , data = Donnees_Finales_Passes2, family = "binomial")
+mod2 <- glm(Y~zone + zone_arrivee, , data = Donnees_Finales_Passes2, family = "binomial")
+anova(mod1, mod2, test= "Chisq")
+```
+```{r}
+AIC(mod1)
+AIC(mod2)
+```
+La p-valeur est très petite : il y une différence significative entre nos deux modèles. On garderait plutot le mod2 ici qui perd moins d'info d'après l'AIC.
+
+```{r}
+mod.AIC <- stepAIC(mcomplet2,trace=TRUE,direction="backward")
+```
+Modèle à garder peut-être zone+length sans interactions 
+On vérifie cela avec une comparaison :
+```{r}
+Ysimple<- glm(as.factor(Y)~zone + length, data = Donnees_Finales_Passes2 , family = "binomial")
+anova(Ysimple, mcomplet2, test = "Chisq")
+```
+#Analyse des résultats des modèles
+
+```{r}
+exp(cbind(coef(mod.AIC), confint(mod.AIC)))
+```
+```{r}
+library(gtsummary)
+```
+```{r}
+tbl_regression(mod.AIC, exponentiate = TRUE)
+```
+```{r}
+library(forestmodel)
+forest_model(mod.AIC)
+```
+```{r}
+library(ggeffects)
+cowplot::plot_grid(plotlist = plot(ggeffect(Yangle)))
+# ok avec angle ça marche mais dès qu'on fait avec length (voir zone?) ça bug...
+```
+# Choix d'un modèle avec le critère AIC
+```{r}
+kept_mod <- stepAIC(mcomplet, direction = "backward") 
+```
+
+```{r}
+library("GGally")
+ggcoef_compare(
+  list("modèle complet" = mcomplet, "modèle réduit" = kept_mod),
+  exponentiate = TRUE)
+# ajuster l'affichage
+```
+# Prédiction avec un nouvel individu
+```{r}
+#Sur le modèle mod2
+new_reussie <- data.frame(zone="Z4",zone_arrivee="Z5")
+new_ratee <- data.frame(zone="Z2",zone_arrivee="Z6")
+predict(mod2,newdata = new_reussie, type="response")
+predict(mod2,newdata = new_ratee, type="response")
+```
+
+```{r}
+#Sur le modèle mod1
+new <- data.frame(zone="Z4",length=2,angle=0)
+predict(mod1,newdata = new, type="response")
+```
+
+```{r}
+#Sur le modèle retenu kept_mod
+new_reussie <- data.frame(length = 10, type = "Normal", body_part= "Foot",zone="Z4",zone_arrivee="Z5", pressure = "FALSE")
+new_ratee <- data.frame(length = 80, type = "Special", body_part= "Other",zone="Z2",zone_arrivee="Z6",  pressure = "TRUE")
+predict(kept_mod,newdata = new_reussie, type="response")
+predict(kept_mod,newdata = new_ratee, type="response")
+```
+```{r}
+#str(Passes_Giroud)
+#select(Passes_Giroud,  pass.type.name, pass.body_part.name, zone, zone_arrivee, pressure)
+# a voir si on peut pas faire echantillon test/ apprentissage
+
+passes_to_predict <- select(Passes_Giroud,pass.length, pass.type.name, pass.body_part.name, `location$zone`,`location_arr$zone_arrivee`, under_pressure)
+glimpse(passes_to_predict)
+
+print(passes_to_predict[0])
+
+#for (i in 0:len(passes_to_predict)){
+#  pred<- predict(kept_mod, passes_to_predict[0],type="response")
+#}
+response_giroud <- predict(kept_mod, passes_to_predict,type="response")
+response_giroud
+
+#rep<-factor(rep,"Rate"=rep<0.6,"Reussi"=rep>0.6)
+#table(rep)
+```
+
+A faire pour la prochaine fois:
+02/03
+
+#Remanier variable outcome pour pouvoir réaliser le modèle (offside=0, incomplete=0, NA=1, injury=0, unknown =0)
+Voir si la création d'un champ de vecteurs pour les passes est utile : représenter le faisceau de passes de quelques joueurs seulement
+#Expliquer le motif géométrique obtenu lorsque l'on affiche l'angle en fonction de la longueur de la passe
+#Analyser la distribution de la longueur des passes par équipe et voir les résultats de l'équipe dans la compétition
+Faire attention au nombre de données représentées (surtout pour les boxplots)
+Définir un profil moyen des passes (piste éventuelle)
+#Analyser boxplot angle~position du joueur
+#Dans le graphe des passes, voir comment est représenté le changement de côté à la mi-temps dans StatBombR
+#Refaire au propre le graphe des passes (à la place du for, apply et unlist)
+
+09/03
+#(Commencer à réfléchir au modèle régression logistique que l'on pourrait mettre en place ~angle, longueur, position du joueur(à remanier en 3 modalités), localisation, zone de terrain)
+Identifier les passes moyennes d'un joueur et le nombre de passes qu'il réalise 
+#Refiltrer le jeu de données pour garder le nom du joueur qui réalise la pass (variable player associée à l'évènement pass)
+Longueur des passes en fonction des équipes sur plus de compétitions
+#Regarder outcome en fonction de la position du joueur, son nom, le type de passe, la hauteur de la passe, underpressure
+#Filtrer les données pour garder celles dans le jeu (enlever free kick etc garder juste NA, pareil pour body_part peut-être)
+#Réfléchir au découpage des zones (2 catégories au début facile difficile) - Récupérer départ et arrivée de la passe et recoder en zones 
+1e modele a tester (outcome expliquée par longueur et angle)
+Dans les boxplots affficher nb de variables + jitter 
+
+23/03 
+#Redondance entre angle et localisation
+
+30/03nt faire étant données les propriétés de la fonction trigo arcsin
+Problème avec angle : comment avoir la direction (là on a juste l'angle compris entre 0 et 180)
+Comme
+Continuer de tester le modèle
+Que faire après ? Continuer sur ce modèle et une autre base de données? Tester des affichages? 
+
+
+06/04
+-test des modèles critère AIC pour sélectionner les variables à garder dans le modèle final
+-pour la prochaine fois : sélctionne un premier modèle en fonction des tests et d'aic
+-affichages de probabilité de réussite
+-tester notre modèle sur dautres échantillons et jeux de données
+-pb du modele complet 3 : NA pour zone de départ 6 : on suppose que les passes qui partent de la zone 6 ratent à chaque fois d'où le fait que le modèle prévoit trop bience qu'il se passe
+rq : plus d'arrivée dans la zone 6 et plus de départ dans la zone 2 : signification qu'une équipe à plus mener le jeu qu'une autre (l'équipe meuneuse souvent autour du goal advserse=> plus de passe dans cette zone et inversement.)
+
+-pb : angles -tester valeur absolue de angle!!
+-pour les affichages : omment obtenir cette probabilité de réussite? on réussit à voir si le modèle prédit bien ce que l'on veut mais comment passer à l'étape suivante?
+
+-test angle longueur zone vs zone dep + arrivee
+quantitatif vs qualitatif+ recodage
+tester différents découpages de zones
+regrouper Z4 et Z5 : pareil Z1,Z2,Z3 pour simplifier l'interprétation
+résultats du travail : modèle de réussite de passe : très grossier
+ajouter information chgmt de zoe pour chqaue passe ou pas?
+longue qui retse dans la zone vs courte qui sort par ex
+
+fonction predict(sur R)  avec nouvelle données
+etude du seuil a partir duquel on considere la passe reussie
+préparer un plan pour le rapport!!
+evaluation des predictions faux positif set faux negatifs
+faire touner le modele sur tous les matchs
+apprendre sur tous les matchs puis utiliser un unique match pour voir si le modele fonctionne bien (pas forcément nécessaire)
+pas forcement besoin d'avoir un unique modele parfait (peut ne pas y avoir d'interactions)
+plus interessant d'analyser les resultats apres en fonction du modele imparfait
+
+description des donnees
+modele
+analyse du modele
+retester avec un autre individu
+
+
+
+palette de color
+heat.colors( on peut choisir le nombre de couleur qu'on veut)
+RColorBrewer : display brewer   all 
+library("viridis")
+
+Voir comment combler les trous sur carte Zoé car bcp de points autour de position départ alors que pas bcp à côté.
+2 cartes : 1 avec pressure, 1 sans
+idem position du défenseur
+
+shiny (carte interractive)
+
