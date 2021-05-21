@@ -1,0 +1,98 @@
+---
+title: "Analyse statistique de données sportives"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load required packages
+
+```{r warning=FALSE, message=FALSE}
+library(devtools)
+library(StatsBombR)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+# Importation de données depuis le site  **StatsBomb**
+
+- Récupération des données concernant les dernièrs coupes du monde de football masculine et féminine.
+
+```{r}
+Comp <- FreeCompetitions()
+Matches <- FreeMatches(Comp)
+
+FIFA_World_Cup <- filter(Matches,competition.competition_name == "FIFA World Cup")
+Women_World_Cup <- filter(Matches,competition.competition_name == "Women's World Cup")
+
+Events_FWC <- StatsBombFreeEvents(MatchesDF = FIFA_World_Cup, Parallel = T)
+Events_WWC <- StatsBombFreeEvents(MatchesDF = Women_World_Cup, Parallel = T)
+```
+```{r}
+Donnees_FWC <- merge(FIFA_World_Cup,Events_FWC, by="match_id")
+Donnees_WWC <- merge(Women_World_Cup,Events_WWC, by="match_id")
+```
+
+- Récupération des données des finales seulement
+
+```{r}
+Donnees_FWC_Finale <- filter(Donnees_FWC, competition_stage.name == "Final")
+Donnees_WWC_Finale <- filter(Donnees_WWC, competition_stage.name == "Final")
+```
+
+- Sélection des données relatives aux passes
+
+```{r}
+Donnees_FWC_Finale_Passes <- filter(Donnees_FWC_Finale, type.name=="Pass")
+Donnees_FWC_Finale_Passes <- select(Donnees_FWC_Finale_Passes,
+                                    competition.competition_name,
+                                    period,minute,second,
+                                    timestamp,location,
+                                    player.name,position.name,
+                                    pass.length,pass.angle,pass.type.name,
+                                    pass.end_location,pass.recipient.name,
+                                    pass.height.name, pass.body_part.name)  
+
+Donnees_WWC_Finale_Passes <- filter(Donnees_WWC_Finale, type.name=="Pass")
+Donnees_WWC_Finale_Passes <- select(Donnees_WWC_Finale_Passes,
+                                    competition.competition_name,
+                                    period,minute,second,
+                                    timestamp,location,
+                                    player.name,position.name,
+                                    pass.length,pass.angle,pass.type.name,
+                                    pass.end_location,pass.recipient.name,
+                                    pass.height.name, pass.body_part.name)  
+
+```
+
+- Assemblage des 2 jeux de données
+
+```{r}
+Donnees_Finales_Passes <- bind_rows(list(Donnees_FWC_Finale_Passes, Donnees_WWC_Finale_Passes))
+```
+
+```{r eval=FALSE}
+summary(Donnees_Finales_Passes)
+```
+
+
+### Pass length
+
+```{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_density(aes(x=pass.length,
+                   fill=competition.competition_name), alpha=0.4) +
+  scale_fill_brewer(palette="Dark2")
+```
+
+### Pass length ~ Pass type
+
+```{r}
+ggplot(Donnees_Finales_Passes) +
+  geom_boxplot(aes(x=pass.height.name, y=pass.length,
+                   color = competition.competition_name)) +
+  facet_wrap(~competition.competition_name) + scale_color_brewer(palette="Dark2")
+```
